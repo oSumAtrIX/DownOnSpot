@@ -9,6 +9,7 @@ mod spotify;
 mod tag;
 
 use async_std::task;
+use clap::{app_from_crate, arg};
 use colored::Colorize;
 use downloader::{DownloadState, Downloader};
 use settings::Settings;
@@ -35,7 +36,13 @@ async fn main() {
 }
 
 async fn start() {
-	let settings = match Settings::load().await {
+	let matches = app_from_crate!()
+		.arg(arg!(-p --path <PATH> "Path to save the downloaded files to").required(false))
+		.arg(arg!(-f --overwrite "Overwrites already downloaded files").required(false))
+		.arg(arg!([URL]... "(track_url | album_url | playlist_url | artist_url)").required(true))
+		.get_matches();
+
+	let mut settings = match Settings::load().await {
 		Ok(settings) => {
 			println!(
 				"{} {}.",
@@ -53,10 +60,7 @@ async fn start() {
 			let default_settings = Settings::new("username", "password", "client_id", "secret");
 			match default_settings.save().await {
 				Ok(_) => {
-					println!(
-						"{}",
-						"..but default settings have been created successfully. Edit them and run the program again.".green()
-					);
+					println!("{}","..but default settings have been created successfully. Edit them and run the program again.".green());
 				}
 				Err(e) => {
 					println!(
@@ -70,13 +74,16 @@ async fn start() {
 		}
 	};
 
-	let args: Vec<String> = env::args().collect();
-	if args.len() <= 1 {
-		println!(
-			"Usage:\n{} (track_url | album_url | playlist_url | artist_url )",
-			args[0]
-		);
-		return;
+	// overwrite arguments passed via cli
+	settings.downloader.path = matches
+		.value_of("path")
+		.unwrap_or(&settings.downloader.path)
+		.to_string();
+
+	if settings.downloader.overwrite {
+		println!("'overwrite' is locked 'true' in settings.json")
+	} else {
+		settings.downloader.overwrite = matches.is_present("overwrite");
 	}
 
 	let spotify = match Spotify::new(
@@ -101,7 +108,11 @@ async fn start() {
 		}
 	};
 
-	let input = args[1..].join(" ");
+	let input = matches
+		.values_of("URL")
+		.unwrap()
+		.collect::<Vec<_>>()
+		.join(" ");
 
 	let downloader = Downloader::new(settings.downloader, spotify);
 	match downloader.handle_input(&input).await {

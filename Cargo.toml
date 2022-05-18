@@ -1,3 +1,5 @@
+cargo-features = ["strip"]
+
 [profile.release]
 strip = true
 opt-level = "z"
@@ -16,7 +18,7 @@ build = "build.rs"
 winres = "0.1"
 
 [dependencies]
-clap = "3.0"
+clap = { version = "3.0.10", features = ["cargo"] }
 log = "0.4"
 url = "2.2"
 protobuf = "2.25"
@@ -29,7 +31,8 @@ reqwest = "0.11"
 colored = "2"
 lame = "0.1"
 aspotify = "0.7"
-librespot = { git = "ssh://git@github.com/oSumAtrIX/free-librespot.git", branch = "dev" }
+#librespot = { git = "ssh://git@github.com/oSumAtrIX/free-librespot.git", branch = "dev" }
+librespot = "0.3.1"
 async-std = { version = "1.10", features = ["attributes", "tokio1"] }
 serde_json = "1.0"
 async-stream = "0.3"

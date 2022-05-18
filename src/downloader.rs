@@ -364,7 +364,7 @@ impl DownloaderInternal {
 		tokio::fs::create_dir_all(path.parent().unwrap()).await?;
 
 		// Download
-		let (path, format) = DownloaderInternal::download_track(
+		let (path, format) = match DownloaderInternal::download_track(
 			&self.spotify.session,
 			&job.track_id,
 			path,
@@ -372,7 +372,11 @@ impl DownloaderInternal {
 			self.event_tx.clone(),
 			job.id,
 		)
-		.await?;
+		.await? {
+			Some(v) => v,
+			None => return Ok(()),
+		};
+
 		// Post processing
 		self.event_tx
 			.send(Message::UpdateState(job.id, DownloadState::Post))
@@ -490,7 +494,7 @@ impl DownloaderInternal {
 		config: DownloaderConfig,
 		tx: Sender<Message>,
 		job_id: i64,
-	) -> Result<(PathBuf, AudioFormat), SpotifyError> {
+	) -> Result<Option<(PathBuf, AudioFormat)>, SpotifyError> {
 		let id = SpotifyId::from_base62(id)?;
 		let mut track = Track::get(session, id).await?;
 
@@ -531,8 +535,12 @@ impl DownloaderInternal {
 			}
 		);
 		let path = Path::new(&path).to_owned();
-		let path_clone = path.clone();
+		if !config.overwrite && path.exists() {
+			// track already downloaded
+			return Ok(None)
+		}
 
+		let path_clone = path.clone();
 		let key = session.audio_key().request(track.id, *file_id).await?;
 		let encrypted = AudioFile::open(session, *file_id, 1024 * 1024, true).await?;
 		let size = encrypted.get_stream_loader_controller().len();
@@ -574,7 +582,7 @@ impl DownloaderInternal {
 		}
 
 		info!("Done downloading: {}", track.id.to_base62());
-		Ok((path, audio_format))
+		Ok(Some((path, audio_format)))
 	}
 
 	fn download_track_stream(
@@ -861,6 +869,7 @@ pub struct DownloaderConfig {
 	pub id3v24: bool,
 	pub convert_to_mp3: bool,
 	pub separator: String,
+	pub overwrite: bool,
 }
 
 impl DownloaderConfig {
@@ -874,6 +883,7 @@ impl DownloaderConfig {
 			id3v24: true,
 			convert_to_mp3: false,
 			separator: ", ".to_string(),
+			overwrite: false,
 		}
 	}
 }

@@ -405,9 +405,9 @@ dependencies = [
 
 [[package]]
 name = "clang-sys"
-version = "1.3.0"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa66045b9cb23c2e9c1520732030608b02ee07e5cfaa5a521ec15ded7fa24c90"
+checksum = "4cc00842eed744b858222c4c9faf7243aafc6d33f92f96935263ef4d8a41ce21"
 dependencies = [
  "glob",
  "libc",
@@ -416,13 +416,14 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.0.13"
+version = "3.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08799f92c961c7a1cf0cc398a9073da99e21ce388b46372c37f3191f2f3eed3e"
+checksum = "b63edc3f163b3c71ec8aa23f9bd6070f77edbf3d1d198b164afa90ff00e4ec62"
 dependencies = [
  "atty",
  "bitflags",
  "indexmap",
+ "lazy_static",
  "os_str_bytes",
  "strsim",
  "termcolor",
@@ -642,7 +643,7 @@ dependencies = [
 
 [[package]]
 name = "down_on_spot"
-version = "0.1.2"
+version = "0.2.0"
 dependencies = [
  "aspotify",
  "async-std",
@@ -1286,9 +1287,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.116"
+version = "0.2.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "565dbd88872dbe4cc8a46e527f26483c1d1f7afa6b884a3bd6cd893d4f98da74"
+checksum = "e74d72e0f9b65b5b4ca49a346af3976df0f9c61d550727f349ecd559f251a26c"
 
 [[package]]
 name = "libloading"
@@ -1327,7 +1328,8 @@ dependencies = [
 [[package]]
 name = "librespot"
 version = "0.3.1"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git?branch=dev#60a86f8ca2337f3993fd3abd30bae755bf07d3f8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fb49bc466977d940fae6e9219d56e1355a2f3d77a348fe7f708fa8f36905491"
 dependencies = [
  "base64",
  "env_logger",
@@ -1353,7 +1355,8 @@ dependencies = [
 [[package]]
 name = "librespot-audio"
 version = "0.3.1"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git?branch=dev#60a86f8ca2337f3993fd3abd30bae755bf07d3f8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5f7cc7e4d1c2596191be523668c933e07ec8a318d099fd66658258a4fe4a2dc"
 dependencies = [
  "aes-ctr",
  "byteorder",
@@ -1368,7 +1371,8 @@ dependencies = [
 [[package]]
 name = "librespot-connect"
 version = "0.3.1"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git?branch=dev#60a86f8ca2337f3993fd3abd30bae755bf07d3f8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e9dbfd8ee475a0874dc284f29c60d214bee43504979b244dd33763979f5ba76"
 dependencies = [
  "form_urlencoded",
  "futures-util",
@@ -1388,7 +1392,8 @@ dependencies = [
 [[package]]
 name = "librespot-core"
 version = "0.3.1"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git?branch=dev#60a86f8ca2337f3993fd3abd30bae755bf07d3f8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "255e8d8d719c020895079d140baf0b0edec8447d39a7e4760708f33b7cafaafb"
 dependencies = [
  "aes",
  "base64",
@@ -1428,7 +1433,8 @@ dependencies = [
 [[package]]
 name = "librespot-discovery"
 version = "0.3.1"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git?branch=dev#60a86f8ca2337f3993fd3abd30bae755bf07d3f8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4adeff34212261a291f6519331f9232699a3b0208116f48cb47a97224ff5b63"
 dependencies = [
  "aes-ctr",
  "base64",
@@ -1450,7 +1456,8 @@ dependencies = [
 [[package]]
 name = "librespot-metadata"
 version = "0.3.1"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git?branch=dev#60a86f8ca2337f3993fd3abd30bae755bf07d3f8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "624ac29bb3ad2e565ef78a049a6c554d94e48b673aaba0bf7e7efd946d0b66cd"
 dependencies = [
  "async-trait",
  "byteorder",
@@ -1463,7 +1470,8 @@ dependencies = [
 [[package]]
 name = "librespot-playback"
 version = "0.3.1"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git?branch=dev#60a86f8ca2337f3993fd3abd30bae755bf07d3f8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "188b252b690ae7387f84a481ff4211df1a5c21eb9bddfc25cbde48793f2e0ef2"
 dependencies = [
  "byteorder",
  "cpal",
@@ -1487,7 +1495,8 @@ dependencies = [
 [[package]]
 name = "librespot-protocol"
 version = "0.3.1"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git?branch=dev#60a86f8ca2337f3993fd3abd30bae755bf07d3f8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41b3699b05cb4c50caa5a5b7f5b3aadb928dfcc91cf1aa632c0dabce3ccc3ee4"
 dependencies = [
  "glob",
  "protobuf",
@@ -2002,24 +2011,24 @@ dependencies = [
 
 [[package]]
 name = "protobuf"
-version = "2.25.2"
+version = "2.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47c327e191621a2158159df97cdbc2e7074bb4e940275e35abf38eb3d2595754"
+checksum = "315b4773dbbe8eda7cc9c15a178b7a5c354030d0ffad360cff41cc748d97eeed"
 
 [[package]]
 name = "protobuf-codegen"
-version = "2.25.2"
+version = "2.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3df8c98c08bd4d6653c2dbae00bd68c1d1d82a360265a5b0bbc73d48c63cb853"
+checksum = "a735d3d378a4b7bfdda234a08bac03ed438066f2bdd880332a2d956c72a66072"
 dependencies = [
  "protobuf",
 ]
 
 [[package]]
 name = "protobuf-codegen-pure"
-version = "2.25.2"
+version = "2.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "394a73e2a819405364df8d30042c0f1174737a763e0170497ec9d36f8a2ea8f7"
+checksum = "f613d2bc23198bfc5f31f90ac2fe260e97eaecd1cd9d371db947de8ccd10512e"
 dependencies = [
  "protobuf",
  "protobuf-codegen",
@@ -2590,9 +2599,9 @@ checksum = "360dfd1d6d30e05fda32ace2c8c70e9c0a9da713275777f5a4dbb8a1893930c6"
 
 [[package]]
 name = "tracing"
-version = "0.1.29"
+version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "375a639232caf30edfc78e8d89b2d4c375515393e7af7e16f01cd96917fb2105"
+checksum = "2d8d93354fe2a8e50d5953f5ae2e47a3fc2ef03292e7ea46e3cc38f549525fb9"
 dependencies = [
  "cfg-if",
  "pin-project-lite",
@@ -2601,9 +2610,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.21"
+version = "0.1.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4ed65637b8390770814083d20756f87bfa2c21bf2f110babdc5438351746e4"
+checksum = "03cfcb51380632a72d3111cb8d3447a8d908e577d31beeac006f836383d29a23"
 dependencies = [
  "lazy_static",
 ]
