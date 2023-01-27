@@ -29,7 +29,7 @@ I am not responsible in any way for the usage of the source code.
 ## Features
 
 -   Works with free Spotify accounts (if using free-librespot fork)
--   Download 96, 160kbit/s audio with a free, 256 and 320 kbit/s audio with a premium account from Spotify, directly
+-   Download 96, 160kbit/s audio with a free account, 256 and 320 kbit/s audio with a premium account from Spotify, directly
 -   Multi-threaded
 -   Search for tracks
 -   Download tracks, playlists, albums and artists
@@ -68,7 +68,7 @@ cargo build --release
 If you get a linker error, you might need to download the [standard libmp3lame](https://www.rarewares.org/mp3-lame-libraries.php#libmp3lame) library.
 On OS X, it should be enough to just run `brew install lame`, provided you have [Homebrew](https://brew.sh/) installed.
 
-## Usage/ Examples
+## Usage / Examples
 
 Running DownOnSpot once will create the default configuration file in the same directory as your shell.
 
@@ -85,6 +85,8 @@ On OS X, the `settings.json` file is created globally for the logged in user and
 
 Apart from your Spotify username and password, you will need to login in to the Spotify developer dashboard and [create a new private application](https://developer.spotify.com/dashboard/applications). Fill in the `client_id` and `client_secret` in your `settings.json` from your newly created app.
 All the other settings should be self-explanatory, conversion from Ogg to MP3 is disabled by default.
+
+Note: If you're on a free spotify account, remember to set down the quality to 160 ("Q320" -> "Q160"), otherwise you'll get an "Audio Key Error" since free account can't go past 160kbit/s.
 
 ### Template variables
 
