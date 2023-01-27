@@ -1,3 +1,5 @@
 /target
+/credentials_cache
+
 settings.json
 libmp3lame.dll
