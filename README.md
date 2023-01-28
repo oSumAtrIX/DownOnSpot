@@ -29,7 +29,7 @@ I am not responsible in any way for the usage of the source code.
 ## Features
 
 -   Works with free Spotify accounts (if using free-librespot fork)
--   Download 96, 160kbit/s audio with a free account, 256 and 320 kbit/s audio with a premium account from Spotify, directly
+-   Download 96, 160kbit/s audio with a free, 256 and 320 kbit/s audio with a premium account from Spotify, directly
 -   Multi-threaded
 -   Search for tracks
 -   Download tracks, playlists, albums and artists
