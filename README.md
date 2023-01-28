@@ -68,7 +68,7 @@ cargo build --release
 If you get a linker error, you might need to download the [standard libmp3lame](https://www.rarewares.org/mp3-lame-libraries.php#libmp3lame) library.
 On OS X, it should be enough to just run `brew install lame`, provided you have [Homebrew](https://brew.sh/) installed.
 
-## Usage / Examples
+## Usage/Examples
 
 Running DownOnSpot once will create the default configuration file in the same directory as your shell.
 
