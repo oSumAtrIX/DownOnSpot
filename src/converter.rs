@@ -49,7 +49,6 @@ impl AudioConverter {
 
 		match format {
 			AudioFormat::Aac => todo!(),
-			AudioFormat::Mp4 => todo!(),
 			// Lewton decoder
 			AudioFormat::Ogg => {
 				let decoder = OggStreamReader::new(ReadWrap::new(Box::new(read)))?;

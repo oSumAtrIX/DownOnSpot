@@ -43,7 +43,7 @@ impl fmt::Display for SpotifyError {
 			SpotifyError::ID3Error(k, e) => write!(f, "ID3 Error: {} {}", k, e),
 			SpotifyError::Reqwest(e) => write!(f, "Reqwest Error: {}", e),
 			SpotifyError::InvalidFormat => write!(f, "Invalid Format!"),
-			SpotifyError::AlreadyDownloaded => write!(f, "Already Downloaded")
+			SpotifyError::AlreadyDownloaded => write!(f, "Already Downloaded"),
 		}
 	}
 }

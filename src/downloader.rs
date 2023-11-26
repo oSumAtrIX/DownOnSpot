@@ -64,9 +64,7 @@ impl Downloader {
 		input: &str,
 	) -> Result<Option<Vec<SearchResult>>, SpotifyError> {
 		if let Ok(uri) = Spotify::parse_uri(input) {
-			if let Err(e) = self.add_uri(&uri).await {
-				return Err(e);
-			}
+			self.add_uri(&uri).await?;
 			Ok(None)
 		} else {
 			let results: Vec<SearchResult> = self
@@ -76,6 +74,7 @@ impl Downloader {
 				.into_iter()
 				.map(SearchResult::from)
 				.collect();
+
 			Ok(Some(results))
 		}
 	}
@@ -300,7 +299,7 @@ impl DownloaderInternal {
 			(
 				"%artist%",
 				sanitize(
-					&track
+					track
 						.artists
 						.iter()
 						.map(|a| a.name.as_str())
@@ -312,7 +311,7 @@ impl DownloaderInternal {
 			(
 				"%artists%",
 				sanitize(
-					&track
+					track
 						.artists
 						.iter()
 						.map(|a| a.name.as_str())
@@ -329,7 +328,7 @@ impl DownloaderInternal {
 			(
 				"%albumArtist%",
 				sanitize(
-					&track
+					track
 						.album
 						.artists
 						.iter()
@@ -342,7 +341,7 @@ impl DownloaderInternal {
 			(
 				"%albumArtists%",
 				sanitize(
-					&track
+					track
 						.album
 						.artists
 						.iter()
@@ -474,12 +473,13 @@ impl DownloaderInternal {
 
 	async fn find_alternative(session: &Session, track: Track) -> Result<Track, SpotifyError> {
 		for alt in track.alternatives {
-			let t = Track::get(&session, alt).await?;
-			if t.available {
+			let t = Track::get(session, alt).await?;
+			if !t.available {
 				return Ok(t);
 			}
 		}
-		return Err(SpotifyError::Unavailable);
+
+		Err(SpotifyError::Unavailable)
 	}
 
 	/// Download track by id
@@ -498,6 +498,7 @@ impl DownloaderInternal {
 		if !track.available {
 			track = DownloaderInternal::find_alternative(session, track).await?;
 		}
+
 		// Quality fallback
 		let mut quality = config.quality;
 		let (mut file_id, mut file_format) = (None, None);
@@ -517,6 +518,7 @@ impl DownloaderInternal {
 			}
 			warn!("{} Falling back to: {:?}", id.to_base62().unwrap(), quality);
 		}
+
 		let file_id = file_id.ok_or(SpotifyError::Unavailable)?;
 		let file_format = file_format.unwrap();
 
@@ -536,7 +538,6 @@ impl DownloaderInternal {
 		if config.skip_existing && path.is_file() {
 			return Err(SpotifyError::AlreadyDownloaded);
 		}
-
 
 		let path_clone = path.clone();
 
@@ -709,7 +710,7 @@ impl From<FileFormat> for AudioFormat {
 }
 
 impl Quality {
-	/// Get librespot FileFormat
+	/// Get librespot AudioFileFormat
 	pub fn get_file_formats(&self) -> Vec<FileFormat> {
 		match self {
 			Self::Q320 => vec![
@@ -882,7 +883,7 @@ impl DownloaderConfig {
 			id3v24: true,
 			convert_to_mp3: false,
 			separator: ", ".to_string(),
-			skip_existing: true
+			skip_existing: true,
 		}
 	}
 }

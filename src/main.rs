@@ -13,10 +13,8 @@ use colored::Colorize;
 use downloader::{DownloadState, Downloader};
 use settings::Settings;
 use spotify::Spotify;
-use std::{
-	env,
-	time::{Duration, Instant},
-};
+use std::env;
+use std::time::{Duration, Instant};
 
 #[cfg(not(windows))]
 #[tokio::main]
