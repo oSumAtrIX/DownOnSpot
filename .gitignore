@@ -1,5 +1,6 @@
 /target
-/credentials_cache
-
-settings.json
-libmp3lame.dll
+.vscode
+.env
+credentials_cache
+*.dll
+*.lib

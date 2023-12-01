@@ -1,136 +1,137 @@
-use std::fmt;
+use core::fmt;
+use std::io::ErrorKind;
+
+use lame::EncodeError;
+use lewton::VorbisError;
+use librespot::{
+	core::{
+		audio_key::AudioKeyError, channel::ChannelError, mercury::MercuryError,
+		session::SessionError, spotify_id::SpotifyIdError,
+	},
+	discovery::Error,
+};
+use rspotify::{model::IdError, ClientError};
+use tokio::task::JoinError;
+use url::ParseError;
 
 #[derive(Debug, Clone)]
-pub enum SpotifyError {
+pub enum DownOnSpotError {
 	Error(String),
-	IoError(std::io::ErrorKind, String),
-	MercuryError,
-	AuthenticationError,
+	Authentication,
+	IoError(ErrorKind, String),
 	Unavailable,
-	SpotifyIdError,
-	ChannelError,
-	AudioKeyError,
-	LameConverterError(String),
-	JoinError,
-	ASpotify(String),
-	Serde(String, usize, usize),
-	InvalidUri,
-	ParseError(url::ParseError),
-	ID3Error(String, String),
-	Reqwest(String),
-	InvalidFormat,
-	AlreadyDownloaded,
+	InvalidOrUnsupportedId,
+	DecoderError(String),
+	EncoderError(String),
+	Invalid(String),
+	DownloaderError,
 }
 
-impl std::error::Error for SpotifyError {}
-impl fmt::Display for SpotifyError {
+impl fmt::Display for DownOnSpotError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
-			SpotifyError::Error(e) => write!(f, "Error: {}", e),
-			SpotifyError::MercuryError => write!(f, "Mercury Error"),
-			SpotifyError::IoError(kind, err) => write!(f, "IO: {:?} {}", kind, err),
-			SpotifyError::AuthenticationError => write!(f, "Authentication Error"),
-			SpotifyError::Unavailable => write!(f, "Unavailable!"),
-			SpotifyError::SpotifyIdError => write!(f, "Invalid Spotify ID"),
-			SpotifyError::ChannelError => write!(f, "Channel Error"),
-			SpotifyError::AudioKeyError => write!(f, "Audio Key Error"),
-			SpotifyError::LameConverterError(e) => write!(f, "Lame error: {}", e),
-			SpotifyError::JoinError => write!(f, "Tokio Join Error"),
-			SpotifyError::ASpotify(e) => write!(f, "Spotify Error: {}", e),
-			SpotifyError::Serde(e, l, c) => write!(f, "Serde Error @{}:{} {}", l, c, e),
-			SpotifyError::InvalidUri => write!(f, "Invalid URI"),
-			SpotifyError::ParseError(e) => write!(f, "Parse Error: {}", e),
-			SpotifyError::ID3Error(k, e) => write!(f, "ID3 Error: {} {}", k, e),
-			SpotifyError::Reqwest(e) => write!(f, "Reqwest Error: {}", e),
-			SpotifyError::InvalidFormat => write!(f, "Invalid Format!"),
-			SpotifyError::AlreadyDownloaded => write!(f, "Already Downloaded"),
+			DownOnSpotError::Error(e) => write!(f, "{}", e),
+			DownOnSpotError::Authentication => write!(f, "Authentication error"),
+			DownOnSpotError::IoError(kind, e) => write!(f, "IO error: {:?} - {}", kind, e),
+			DownOnSpotError::Unavailable => write!(f, "Unavailable"),
+			DownOnSpotError::InvalidOrUnsupportedId => write!(f, "Invalid or unsupported ID"),
+			DownOnSpotError::DecoderError(e) => write!(f, "Decoder error: {}", e),
+			DownOnSpotError::EncoderError(e) => write!(f, "Encoder error: {}", e),
+			DownOnSpotError::Invalid(e) => write!(f, "Invalid: {}", e),
+			DownOnSpotError::DownloaderError => write!(f, "Error during download"),
 		}
 	}
 }
-impl From<std::io::Error> for SpotifyError {
+
+impl From<IdError> for DownOnSpotError {
+	fn from(e: IdError) -> Self {
+		Self::Invalid(e.to_string())
+	}
+}
+
+impl From<ParseError> for DownOnSpotError {
+	fn from(e: ParseError) -> Self {
+		Self::Invalid(e.to_string())
+	}
+}
+
+impl From<ClientError> for DownOnSpotError {
+	fn from(_e: ClientError) -> Self {
+		Self::Authentication
+	}
+}
+
+impl From<VorbisError> for DownOnSpotError {
+	fn from(e: VorbisError) -> Self {
+		Self::DecoderError(e.to_string())
+	}
+}
+
+impl From<EncodeError> for DownOnSpotError {
+	fn from(e: EncodeError) -> Self {
+		Self::EncoderError(format!("{:?}", e))
+	}
+}
+
+impl From<lame::Error> for DownOnSpotError {
+	fn from(kind: lame::Error) -> Self {
+		Self::EncoderError(format!("{:?}", kind))
+	}
+}
+
+impl From<AudioKeyError> for DownOnSpotError {
+	fn from(_e: AudioKeyError) -> Self {
+		Self::Error("AudioKey Error".to_owned())
+	}
+}
+
+impl From<JoinError> for DownOnSpotError {
+	fn from(_e: JoinError) -> Self {
+		Self::Error("Join Error".to_owned())
+	}
+}
+
+impl From<SpotifyIdError> for DownOnSpotError {
+	fn from(_e: SpotifyIdError) -> Self {
+		Self::InvalidOrUnsupportedId
+	}
+}
+
+impl From<ChannelError> for DownOnSpotError {
+	fn from(_e: ChannelError) -> Self {
+		Self::Error("Channel Error".to_owned())
+	}
+}
+
+impl From<std::io::Error> for DownOnSpotError {
 	fn from(e: std::io::Error) -> Self {
 		Self::IoError(e.kind(), e.to_string())
 	}
 }
-impl From<Box<dyn std::error::Error>> for SpotifyError {
+
+impl From<Error> for DownOnSpotError {
+	fn from(e: Error) -> Self {
+		Self::Error(e.to_string())
+	}
+}
+
+impl From<SessionError> for DownOnSpotError {
+	fn from(e: SessionError) -> Self {
+		match e {
+			SessionError::AuthenticationError(_) => Self::Authentication,
+			SessionError::IoError(_) => todo!(),
+		}
+	}
+}
+
+impl From<Box<dyn std::error::Error>> for DownOnSpotError {
 	fn from(e: Box<dyn std::error::Error>) -> Self {
 		Self::Error(e.to_string())
 	}
 }
 
-impl From<librespot::core::mercury::MercuryError> for SpotifyError {
-	fn from(_: librespot::core::mercury::MercuryError) -> Self {
-		Self::MercuryError
-	}
-}
-
-impl From<librespot::core::session::SessionError> for SpotifyError {
-	fn from(e: librespot::core::session::SessionError) -> Self {
-		match e {
-			librespot::core::session::SessionError::IoError(e) => e.into(),
-			librespot::core::session::SessionError::AuthenticationError(_) => {
-				SpotifyError::AuthenticationError
-			}
-		}
-	}
-}
-
-impl From<librespot::core::spotify_id::SpotifyIdError> for SpotifyError {
-	fn from(_: librespot::core::spotify_id::SpotifyIdError) -> Self {
-		Self::SpotifyIdError
-	}
-}
-
-impl From<librespot::core::channel::ChannelError> for SpotifyError {
-	fn from(_: librespot::core::channel::ChannelError) -> Self {
-		Self::ChannelError
-	}
-}
-
-impl From<librespot::core::audio_key::AudioKeyError> for SpotifyError {
-	fn from(_: librespot::core::audio_key::AudioKeyError) -> Self {
-		Self::AudioKeyError
-	}
-}
-
-impl From<tokio::task::JoinError> for SpotifyError {
-	fn from(_: tokio::task::JoinError) -> Self {
-		Self::JoinError
-	}
-}
-
-impl From<aspotify::Error> for SpotifyError {
-	fn from(e: aspotify::Error) -> Self {
-		Self::ASpotify(e.to_string())
-	}
-}
-
-impl From<serde_json::Error> for SpotifyError {
-	fn from(e: serde_json::Error) -> Self {
-		Self::Serde(e.to_string(), e.line(), e.column())
-	}
-}
-
-impl From<url::ParseError> for SpotifyError {
-	fn from(e: url::ParseError) -> Self {
-		Self::ParseError(e)
-	}
-}
-
-impl From<id3::Error> for SpotifyError {
-	fn from(e: id3::Error) -> Self {
-		Self::ID3Error(e.kind.to_string(), e.description.to_string())
-	}
-}
-
-impl From<reqwest::Error> for SpotifyError {
-	fn from(e: reqwest::Error) -> Self {
-		Self::Reqwest(e.to_string())
-	}
-}
-
-impl From<lewton::VorbisError> for SpotifyError {
-	fn from(e: lewton::VorbisError) -> Self {
-		SpotifyError::Error(format!("Lewton: {}", e))
+impl From<MercuryError> for DownOnSpotError {
+	fn from(_: MercuryError) -> Self {
+		Self::DownloaderError
 	}
 }
