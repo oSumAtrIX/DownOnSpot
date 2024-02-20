@@ -161,9 +161,9 @@ async fn start() {
 					let progress: String;
 
 					if state != DownloadState::Done {
-						exit_flag &= 0;
 						progress = match state {
 							DownloadState::Downloading(r, t) => {
+								exit_flag &= 0;
 								let p = r as f32 / t as f32 * 100.0;
 								if p > 100.0 {
 									"100%".to_string()
@@ -171,17 +171,18 @@ async fn start() {
 									format!("{}%", p as i8)
 								}
 							}
-							DownloadState::Post => "Postprocessing... ".to_string(),
-							DownloadState::None => "Preparing... ".to_string(),
-							DownloadState::Lock => "Preparing... ".to_string(),
+							DownloadState::Post => {
+								exit_flag &= 0;
+								"Postprocessing... ".to_string()
+							}
+							DownloadState::None | DownloadState::Lock => {
+								exit_flag &= 0;
+								"Preparing... ".to_string()
+							}
 							DownloadState::Error(e) => {
-								exit_flag |= 1;
 								format!("{} ", e)
 							}
-							DownloadState::Done => {
-								exit_flag |= 1;
-								"Impossible state".to_string()
-							}
+							DownloadState::Done => "Impossible state".to_string(),
 						};
 					} else {
 						progress = "Done.".to_string();
