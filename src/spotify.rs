@@ -88,11 +88,15 @@ impl Spotify {
 				Ok(SpotifyItem::Track(track.data))
 			}
 			"playlist" => {
-				let playlist = self.spotify.playlists().get_playlist(id, None).await?;
+				let playlist = self
+					.spotify
+					.playlists()
+					.get_playlist(id, self.market)
+					.await?;
 				Ok(SpotifyItem::Playlist(playlist.data))
 			}
 			"album" => {
-				let album = self.spotify.albums().get_album(id, None).await?;
+				let album = self.spotify.albums().get_album(id, self.market).await?;
 				Ok(SpotifyItem::Album(album.data))
 			}
 			"artist" => {
@@ -125,7 +129,7 @@ impl Spotify {
 			let page = self
 				.spotify
 				.playlists()
-				.get_playlists_items(id, 100, offset, None)
+				.get_playlists_items(id, 100, offset, self.market)
 				.await?;
 			items.append(
 				&mut page
@@ -158,7 +162,7 @@ impl Spotify {
 			let page = self
 				.spotify
 				.albums()
-				.get_album_tracks(id, 50, offset, None)
+				.get_album_tracks(id, 50, offset, self.market)
 				.await?;
 			items.append(&mut page.data.items.to_vec());
 
@@ -178,7 +182,7 @@ impl Spotify {
 			let page = self
 				.spotify
 				.artists()
-				.get_artist_albums(id, None, 50, offset, None)
+				.get_artist_albums(id, None, 50, offset, self.market)
 				.await?;
 
 			for album in &mut page.data.items.iter() {
