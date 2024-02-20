@@ -34,7 +34,7 @@ async fn main() {
 }
 
 async fn start() {
-    env_logger::init();
+	env_logger::init();
 
 	let settings = match Settings::load().await {
 		Ok(settings) => {
