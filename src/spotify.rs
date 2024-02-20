@@ -1,5 +1,5 @@
 use aspotify::{
-	Album, Artist, Client, ClientCredentials, ItemType, Playlist, PlaylistItemType, Track,
+	Album, Artist, Client, ClientCredentials, ItemType, Market, Playlist, PlaylistItemType, Track,
 	TrackSimplified,
 };
 use librespot::core::authentication::Credentials;
@@ -16,6 +16,7 @@ pub struct Spotify {
 	// librespotify sessopm
 	pub session: Session,
 	pub spotify: Client,
+	pub market: Option<Market>,
 }
 
 impl Spotify {
@@ -25,6 +26,7 @@ impl Spotify {
 		password: &str,
 		client_id: &str,
 		client_secret: &str,
+		market: Option<Market>,
 	) -> Result<Spotify, SpotifyError> {
 		// librespot
 		let credentials = Credentials::with_password(username, password);
@@ -43,7 +45,11 @@ impl Spotify {
 		};
 		let spotify = Client::new(credentials);
 
-		Ok(Spotify { session, spotify })
+		Ok(Spotify {
+			session,
+			spotify,
+			market,
+		})
 	}
 
 	/// Parse URI or URL into URI
@@ -78,7 +84,7 @@ impl Spotify {
 		let id = parts[1];
 		match parts[0] {
 			"track" => {
-				let track = self.spotify.tracks().get_track(id, None).await?;
+				let track = self.spotify.tracks().get_track(id, self.market).await?;
 				Ok(SpotifyItem::Track(track.data))
 			}
 			"playlist" => {
@@ -193,6 +199,7 @@ impl Clone for Spotify {
 		Self {
 			session: self.session.clone(),
 			spotify: Client::new(self.spotify.credentials.clone()),
+			market: self.market.clone(),
 		}
 	}
 }
