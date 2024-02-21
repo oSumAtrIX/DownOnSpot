@@ -52,7 +52,7 @@ impl Settings {
 			client_secret: client_secret.to_string(),
 			refresh_ui_seconds: 1,
 			downloader: DownloaderConfig::new(),
-			market: Some(CountryCode::USA),
+			market: None,
 		}
 	}
 
