@@ -416,7 +416,15 @@ impl DownloaderInternal {
 		// Write tags
 		let config = config.clone();
 		tokio::task::spawn_blocking(move || {
-			DownloaderInternal::write_tags(path, format, tags, date, cover, config)
+			DownloaderInternal::write_tags(
+				path,
+				job.track_id.to_string(),
+				format,
+				tags,
+				date,
+				cover,
+				config,
+			)
 		})
 		.await??;
 
@@ -445,6 +453,7 @@ impl DownloaderInternal {
 	/// Write tags to file ( BLOCKING )
 	fn write_tags(
 		path: impl AsRef<Path>,
+		track_id: String,
 		format: AudioFormat,
 		tags: Vec<(Field, Vec<String>)>,
 		date: NaiveDate,
@@ -467,6 +476,8 @@ impl DownloaderInternal {
 		if let Some((mime, data)) = cover {
 			tag.add_cover(&mime, data);
 		}
+		// UFID spotify track id
+		tag.add_unique_file_identifier(&track_id);
 		tag.save()?;
 		Ok(())
 	}

@@ -89,4 +89,8 @@ impl super::Tag for OggTag {
 			&format!("{}-{:02}-{:02}", date.year(), date.month(), date.day()),
 		)
 	}
+
+	fn add_unique_file_identifier(&mut self, track_id: &str) {
+		self.tag.add_tag_single("SPOTIFY.COM_TRACKID", track_id);
+	}
 }
