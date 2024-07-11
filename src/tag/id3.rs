@@ -1,5 +1,5 @@
 use chrono::{Datelike, NaiveDate};
-use id3::frame::{Picture, PictureType, Timestamp};
+use id3::frame::{Picture, PictureType, Timestamp, UniqueFileIdentifier};
 use id3::{Tag, TagLike, Version};
 use std::path::{Path, PathBuf};
 
@@ -81,5 +81,12 @@ impl super::Tag for ID3Tag {
 			minute: None,
 			second: None,
 		})
+	}
+
+	fn add_unique_file_identifier(&mut self, track_id: &str) {
+		self.tag.add_frame(UniqueFileIdentifier {
+			owner_identifier: "spotify.com".to_string(),
+			identifier: track_id.into(),
+		});
 	}
 }

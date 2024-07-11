@@ -1,3 +1,4 @@
+use base64::Engine;
 use chrono::{Datelike, NaiveDate};
 use oggvorbismeta::{read_comment_header, replace_comment_header, CommentHeader, VorbisComments};
 use std::fs::File;
@@ -40,8 +41,31 @@ impl super::Tag for OggTag {
 		self.set_raw(tag, value);
 	}
 
-	fn add_cover(&mut self, _mime: &str, _data: Vec<u8>) {
-		error!("ALBUM ART IN OGG NOT SUPPORTED!");
+	fn add_cover(&mut self, mime: &str, data: Vec<u8>) {
+		let mut picture: Vec<u8> = Vec::new();
+
+		// MIME type
+		picture.extend(3u32.to_be_bytes().iter());
+		picture.extend((mime.as_bytes().len() as u32).to_be_bytes().iter());
+		picture.extend(mime.as_bytes());
+
+		// Description
+		picture.extend(0u32.to_be_bytes().iter());
+
+		// Width, height, depth, and number of colors
+		picture.extend(0u32.to_be_bytes().iter());
+		picture.extend(0u32.to_be_bytes().iter());
+		picture.extend(0u32.to_be_bytes().iter());
+		picture.extend(0u32.to_be_bytes().iter());
+
+		// Image data
+		picture.extend((data.len() as u32).to_be_bytes().iter());
+		picture.extend(data);
+
+		self.tag.add_tag_single(
+			"METADATA_BLOCK_PICTURE",
+			&base64::engine::general_purpose::STANDARD.encode(picture),
+		);
 	}
 
 	fn set_raw(&mut self, tag: &str, value: Vec<String>) {
@@ -64,5 +88,9 @@ impl super::Tag for OggTag {
 			"DATE",
 			&format!("{}-{:02}-{:02}", date.year(), date.month(), date.day()),
 		)
+	}
+
+	fn add_unique_file_identifier(&mut self, track_id: &str) {
+		self.tag.add_tag_single("SPOTIFY.COM_TRACKID", track_id);
 	}
 }

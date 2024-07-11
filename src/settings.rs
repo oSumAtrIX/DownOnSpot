@@ -42,6 +42,15 @@ fn get_config_folder_path() -> PathBuf {
 	Path::new(&env::var("APPDATA").unwrap()).join("down_on_spot")
 }
 
+/// Returns the full path to the Settings json
+///
+/// Windows: `%APPDATA%\down_on_spot\settings.json`
+///
+/// Unix-like: `~/.config/down_on_spot/settings.json`
+pub fn get_config_settings_path() -> PathBuf {
+	get_config_folder_path().join("settings.json")
+}
+
 impl Settings {
 	// Create new instance
 	pub fn new(username: &str, password: &str, client_id: &str, client_secret: &str) -> Settings {
@@ -56,25 +65,28 @@ impl Settings {
 		}
 	}
 
-	// Save config
-	pub async fn save(&self) -> Result<(), SpotifyError> {
+	/// Save config
+	///
+	/// Returns the path of the written file if successful
+	pub async fn save(&self) -> Result<PathBuf, SpotifyError> {
 		// Get and create config folder path, generate config file path
-		let config_folder_path = get_config_folder_path();
+		let config_file_path = get_config_settings_path();
+		let config_folder_path = config_file_path
+			.parent()
+			.expect("Configuration file path should have a parent component");
 		create_dir_all(&config_folder_path).await?;
-		let config_file_path = config_folder_path.join("settings.json");
 
 		// Serialize the settings to a json file
 		let data = serde_json::to_string_pretty(self)?;
-		let mut file = File::create(config_file_path).await?;
+		let mut file = File::create(&config_file_path).await?;
 		file.write_all(data.as_bytes()).await?;
-		Ok(())
+		Ok(config_file_path)
 	}
 
 	// Load config
 	pub async fn load() -> Result<Settings, SpotifyError> {
 		// Get config folder path, generate config file path
-		let config_folder_path = get_config_folder_path();
-		let config_file_path = config_folder_path.join("settings.json");
+		let config_file_path = get_config_settings_path();
 
 		// Deserialize the settings from a json file
 		let mut file = File::open(config_file_path).await?;

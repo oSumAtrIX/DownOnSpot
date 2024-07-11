@@ -84,7 +84,11 @@ impl Downloader {
 		let uri = Spotify::parse_uri(uri)?;
 		let item = self.spotify.resolve_uri(&uri).await?;
 		match item {
-			SpotifyItem::Track(t) => self.add_to_queue(t.into()).await,
+			SpotifyItem::Track(t) => {
+				if !t.is_local {
+					self.add_to_queue(t.into()).await;
+				}
+			}
 			SpotifyItem::Album(a) => {
 				let tracks = self.spotify.full_album(&a.id).await?;
 				let queue: Vec<Download> = tracks.into_iter().map(|t| t.into()).collect();
@@ -416,7 +420,15 @@ impl DownloaderInternal {
 		// Write tags
 		let config = config.clone();
 		tokio::task::spawn_blocking(move || {
-			DownloaderInternal::write_tags(path, format, tags, date, cover, config)
+			DownloaderInternal::write_tags(
+				path,
+				job.track_id.to_string(),
+				format,
+				tags,
+				date,
+				cover,
+				config,
+			)
 		})
 		.await??;
 
@@ -445,6 +457,7 @@ impl DownloaderInternal {
 	/// Write tags to file ( BLOCKING )
 	fn write_tags(
 		path: impl AsRef<Path>,
+		track_id: String,
 		format: AudioFormat,
 		tags: Vec<(Field, Vec<String>)>,
 		date: NaiveDate,
@@ -467,6 +480,8 @@ impl DownloaderInternal {
 		if let Some((mime, data)) = cover {
 			tag.add_cover(&mime, data);
 		}
+		// UFID spotify track id
+		tag.add_unique_file_identifier(&track_id);
 		tag.save()?;
 		Ok(())
 	}
@@ -474,7 +489,7 @@ impl DownloaderInternal {
 	async fn find_alternative(session: &Session, track: Track) -> Result<Track, SpotifyError> {
 		for alt in track.alternatives {
 			let t = Track::get(session, alt).await?;
-			if !t.available {
+			if t.available {
 				return Ok(t);
 			}
 		}

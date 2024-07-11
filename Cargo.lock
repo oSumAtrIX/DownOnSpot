@@ -415,6 +415,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35636a1494ede3b646cc98f74f8e62c773a38a659ebc777a2cf26b9b74171df9"
 
 [[package]]
+name = "base64"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9475866fec1451be56a3c2400fd081ff546538961565ccb5b7142cbd22bc7a51"
+
+[[package]]
 name = "bindgen"
 version = "0.69.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -571,6 +577,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2275f18819641850fa26c89acc84d465c1bf91ce57bc2748b28c420473352f64"
 dependencies = [
  "clap_builder",
+ "clap_derive",
 ]
 
 [[package]]
@@ -583,6 +590,18 @@ dependencies = [
  "anstyle",
  "clap_lex",
  "strsim",
+]
+
+[[package]]
+name = "clap_derive"
+version = "4.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf9804afaaf59a91e75b022a30fb7229a7901f60c755489cc61c9b423b836442"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.39",
 ]
 
 [[package]]
@@ -820,11 +839,12 @@ dependencies = [
 
 [[package]]
 name = "down_on_spot"
-version = "0.2.5"
+version = "0.3.0"
 dependencies = [
  "aspotify",
  "async-std",
  "async-stream",
+ "base64 0.22.0",
  "chrono",
  "clap",
  "colored",
@@ -1227,6 +1247,12 @@ checksum = "e7f66481bfee273957b1f20485a4ff3362987f85b2c236580d81b4eb7a326429"
 dependencies = [
  "http",
 ]
+
+[[package]]
+name = "heck"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
 name = "hermit-abi"
@@ -1656,7 +1682,8 @@ dependencies = [
 [[package]]
 name = "librespot"
 version = "0.4.2"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git#f28fa264528dc85f8f325c18e8461b0f2b43dca1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea4c9952ef48968f8184a4a87f8576982426ebe623342d5a28f7d9c4978e4a44"
 dependencies = [
  "base64 0.13.1",
  "env_logger 0.9.3",
@@ -1682,7 +1709,8 @@ dependencies = [
 [[package]]
 name = "librespot-audio"
 version = "0.4.2"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git#f28fa264528dc85f8f325c18e8461b0f2b43dca1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c176a31355e1ea8e0b9c4ced19df4947bfe4770661c25c142b6fba2365940d9d"
 dependencies = [
  "aes-ctr",
  "byteorder",
@@ -1697,7 +1725,8 @@ dependencies = [
 [[package]]
 name = "librespot-connect"
 version = "0.4.2"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git#f28fa264528dc85f8f325c18e8461b0f2b43dca1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ffafb6a443e9445ccb3d5d591573b5b1da3c89a9b8846c63ba2c3710210d3ec"
 dependencies = [
  "form_urlencoded",
  "futures-util",
@@ -1717,7 +1746,8 @@ dependencies = [
 [[package]]
 name = "librespot-core"
 version = "0.4.2"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git#f28fa264528dc85f8f325c18e8461b0f2b43dca1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "046349f25888e644bf02d9c5de0164b2a493d29aa4ce18e1ad0b756da9b55d6d"
 dependencies = [
  "aes",
  "base64 0.13.1",
@@ -1757,7 +1787,8 @@ dependencies = [
 [[package]]
 name = "librespot-discovery"
 version = "0.4.2"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git#f28fa264528dc85f8f325c18e8461b0f2b43dca1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2aa877d18f6150364012cb4be5682d62d7c712c88bae2d0d01720fd7c15e2f06"
 dependencies = [
  "aes-ctr",
  "base64 0.13.1",
@@ -1778,7 +1809,8 @@ dependencies = [
 [[package]]
 name = "librespot-metadata"
 version = "0.4.2"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git#f28fa264528dc85f8f325c18e8461b0f2b43dca1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b80361fcbcb5092056fd47c08c34d5d51b08385d8efb6941c0d3e46d032c21c"
 dependencies = [
  "async-trait",
  "byteorder",
@@ -1791,7 +1823,8 @@ dependencies = [
 [[package]]
 name = "librespot-playback"
 version = "0.4.2"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git#f28fa264528dc85f8f325c18e8461b0f2b43dca1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5190a0b9bcc7f70ee4196a6b4a1c731d405ca130d4a6fcd4c561cfdde8b7cfb7"
 dependencies = [
  "byteorder",
  "cpal",
@@ -1816,7 +1849,8 @@ dependencies = [
 [[package]]
 name = "librespot-protocol"
 version = "0.4.2"
-source = "git+ssh://git@github.com/oSumAtrIX/free-librespot.git#f28fa264528dc85f8f325c18e8461b0f2b43dca1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d6d3ac6196ac0ea67bbe039f56d6730a5d8b31502ef9bce0f504ed729dcb39f"
 dependencies = [
  "glob",
  "protobuf 2.28.0",

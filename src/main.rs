@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate log;
 
+mod arg;
 mod converter;
 mod downloader;
 mod error;
@@ -9,6 +10,7 @@ mod spotify;
 mod tag;
 
 use aspotify::Market;
+use arg::Args;
 use async_std::task;
 use colored::Colorize;
 use downloader::{DownloadState, Downloader};
@@ -36,6 +38,8 @@ async fn main() {
 async fn start() {
 	env_logger::init();
 
+	let args = Args::from_cli();
+
 	let settings = match Settings::load().await {
 		Ok(settings) => {
 			println!(
@@ -53,10 +57,11 @@ async fn start() {
 			);
 			let default_settings = Settings::new("username", "password", "client_id", "secret");
 			match default_settings.save().await {
-				Ok(_) => {
+				Ok(path) => {
 					println!(
-						"{}",
-						"..but default settings have been created successfully. Edit them and run the program again.".green()
+						"{}{}",
+						"..but default settings have been created successfully. Edit them and run the program again.\nFind the settings file at: ".green(),
+						path.to_string_lossy()
 					);
 				}
 				Err(e) => {
@@ -70,15 +75,6 @@ async fn start() {
 			return;
 		}
 	};
-
-	let args: Vec<String> = env::args().collect();
-	if args.len() <= 1 {
-		println!(
-			"Usage:\n{} <search_term> | <track_url> | <album_url> | <playlist_url> | <artist_url>",
-			args[0]
-		);
-		return;
-	}
 
 	let spotify = match Spotify::new(
 		&settings.username,
@@ -107,10 +103,8 @@ async fn start() {
 		}
 	};
 
-	let input = args[1..].join(" ");
-
 	let downloader = Downloader::new(settings.downloader, spotify);
-	match downloader.handle_input(&input).await {
+	match downloader.handle_input(&args.input).await {
 		Ok(search_results) => {
 			if let Some(search_results) = search_results {
 				print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
@@ -167,9 +161,9 @@ async fn start() {
 					let progress: String;
 
 					if state != DownloadState::Done {
-						exit_flag &= 0;
 						progress = match state {
 							DownloadState::Downloading(r, t) => {
+								exit_flag &= 0;
 								let p = r as f32 / t as f32 * 100.0;
 								if p > 100.0 {
 									"100%".to_string()
@@ -177,17 +171,18 @@ async fn start() {
 									format!("{}%", p as i8)
 								}
 							}
-							DownloadState::Post => "Postprocessing... ".to_string(),
-							DownloadState::None => "Preparing... ".to_string(),
-							DownloadState::Lock => "Preparing... ".to_string(),
+							DownloadState::Post => {
+								exit_flag &= 0;
+								"Postprocessing... ".to_string()
+							}
+							DownloadState::None | DownloadState::Lock => {
+								exit_flag &= 0;
+								"Preparing... ".to_string()
+							}
 							DownloadState::Error(e) => {
-								exit_flag |= 1;
 								format!("{} ", e)
 							}
-							DownloadState::Done => {
-								exit_flag |= 1;
-								"Impossible state".to_string()
-							}
+							DownloadState::Done => "Impossible state".to_string(),
 						};
 					} else {
 						progress = "Done.".to_string();
