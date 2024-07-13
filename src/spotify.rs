@@ -1,6 +1,6 @@
 use aspotify::{
-	Album, Artist, Client, ClientCredentials, ItemType, Market, Playlist, PlaylistItemType, Track,
-	TrackSimplified,
+	Album, Artist, Client, ClientCredentials, CountryCode, ItemType, Market, Playlist,
+	PlaylistItemType, Track, TrackSimplified,
 };
 use librespot::core::authentication::Credentials;
 use librespot::core::cache::Cache;
@@ -26,7 +26,7 @@ impl Spotify {
 		password: &str,
 		client_id: &str,
 		client_secret: &str,
-		market: Option<Market>,
+		market_country_code: Option<CountryCode>,
 	) -> Result<Spotify, SpotifyError> {
 		// librespot
 		let credentials = Credentials::with_password(username, password);
@@ -48,7 +48,11 @@ impl Spotify {
 		Ok(Spotify {
 			session,
 			spotify,
-			market,
+			market: if let Some(countrycode) = market_country_code {
+				Some(Market::Country(countrycode))
+			} else {
+				None
+			},
 		})
 	}
 

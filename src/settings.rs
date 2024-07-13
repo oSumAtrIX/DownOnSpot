@@ -23,7 +23,7 @@ pub struct Settings {
 	pub client_secret: String,
 	pub refresh_ui_seconds: u64,
 	pub downloader: DownloaderConfig,
-	pub market: Option<CountryCode>,
+	pub market_country_code: Option<CountryCode>,
 }
 
 // On UNIX systems (eg. Linux, *BSD, even macOS), follow the
@@ -61,7 +61,7 @@ impl Settings {
 			client_secret: client_secret.to_string(),
 			refresh_ui_seconds: 1,
 			downloader: DownloaderConfig::new(),
-			market: None,
+			market_country_code: None,
 		}
 	}
 

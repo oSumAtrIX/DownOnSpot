@@ -9,7 +9,6 @@ mod settings;
 mod spotify;
 mod tag;
 
-use aspotify::Market;
 use arg::Args;
 use async_std::task;
 use colored::Colorize;
@@ -81,11 +80,7 @@ async fn start() {
 		&settings.password,
 		&settings.client_id,
 		&settings.client_secret,
-		if let Some(countrycode) = settings.market {
-			Some(Market::Country(countrycode))
-		} else {
-			None
-		},
+		settings.market_country_code,
 	)
 	.await
 	{
