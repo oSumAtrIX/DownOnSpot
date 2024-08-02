@@ -164,7 +164,7 @@ async fn communication_thread(
 				let i = queue.iter().position(|i| i.id == id).unwrap();
 				queue[i].state = state.clone();
 				if state == DownloadState::Done {
-					queue.remove(i);
+					// queue.remove(i);
 				}
 			}
 			Message::AddToQueue(download) => {
