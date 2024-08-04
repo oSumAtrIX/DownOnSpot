@@ -13,9 +13,12 @@ use arg::Args;
 use async_std::task;
 use colored::Colorize;
 use downloader::{DownloadState, Downloader};
+use error::SpotifyError;
 use settings::Settings;
 use spotify::Spotify;
 use std::time::{Duration, Instant};
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(not(windows))]
 #[tokio::main]
@@ -98,6 +101,10 @@ async fn start() {
 	};
 
 	let downloader = Downloader::new(settings.downloader, spotify);
+
+	let bold = "\x1b[1m";
+	let bold_off = "\x1b[0m";
+
 	match downloader.handle_input(&args.input).await {
 		Ok(search_results) => {
 			if let Some(search_results) = search_results {
@@ -143,57 +150,146 @@ async fn start() {
 
 			let refresh = Duration::from_secs(settings.refresh_ui_seconds);
 			let now = Instant::now();
-			let mut time_elapsed: u64;
+			let mut time_elapsed: u64 = 0;
+
+			let mut download_states =
+				vec![DownloadState::None; downloader.get_downloads().await.len()];
+			let mut messages = vec![];
 
 			'outer: loop {
-				print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+				print!("\x1b[2J\x1b[1;1H");
 				let mut exit_flag: i8 = 1;
 
-				for download in downloader.get_downloads().await {
-					let state = download.state;
+				let mut num_completed = 0;
+				let mut num_err = 0;
+				let mut num_downloading = 0;
+				let mut num_waiting = 0;
 
-					let progress = if state != DownloadState::Done {
+				let mut current_download_view = String::new();
+
+				let mut progress_sum = 0.;
+
+				for (i, download) in (&downloader.get_downloads().await).iter().enumerate() {
+					let state = &download.state;
+
+					if state != &download_states[i] {
+						download_states[i] = state.clone();
 						match state {
-							DownloadState::Downloading(r, t) => {
-								exit_flag &= 0;
-								let p = r as f32 / t as f32 * 100.0;
-								if p > 100.0 {
-									"100%".to_string()
+							DownloadState::None => (),
+							DownloadState::Lock => (),
+							DownloadState::Downloading(_, _) => (),
+							DownloadState::Post => (),
+							DownloadState::Done => messages.push(format!(
+								"{time_elapsed: >5} | {}: {}",
+								"Downloaded".green(),
+								download.title
+							)),
+							DownloadState::Error(e) => messages.push(format!(
+								"{time_elapsed: >5} | {}: {}",
+								if e == &SpotifyError::AlreadyDownloaded {
+									e.to_string().yellow()
 								} else {
-									format!("{}%", p as i8)
-								}
-							}
-							DownloadState::Post => {
-								exit_flag &= 0;
-								"Postprocessing... ".to_string()
-							}
-							DownloadState::None | DownloadState::Lock => {
-								exit_flag &= 0;
-								"Preparing... ".to_string()
-							}
-							DownloadState::Error(e) => {
-								format!("{} ", e)
-							}
-							DownloadState::Done => "Impossible state".to_string(),
-						}
-					} else {
-						"Done.".to_string()
-					};
+									e.to_string().red()
+								},
+								download.title
+							)),
+						};
+					}
 
-					println!("{:<19}| {}", progress, download.title);
+					if let Some(msg) = match state {
+						DownloadState::Downloading(r, t) => {
+							exit_flag &= 0;
+							let p = *r as f32 / *t as f32;
+							progress_sum += p;
+							num_downloading += 1;
+							if p > 1. {
+								Some("100%".to_string())
+							} else {
+								Some(format!("{}%", (p * 100.) as i8))
+							}
+						}
+						DownloadState::Post => {
+							exit_flag &= 0;
+							Some("Postprocessing... ".to_string())
+						}
+						DownloadState::None | DownloadState::Lock => {
+							exit_flag &= 0;
+							num_waiting += 1;
+							None
+						}
+						DownloadState::Error(_) => {
+							num_err += 1;
+							None
+						}
+						DownloadState::Done => {
+							num_completed += 1;
+							None
+						}
+					} {
+						current_download_view
+							.push_str(&format!("{: >4} | {}\n", msg, download.title));
+					}
 				}
+
+				while messages.len() > 8 {
+					messages.remove(0);
+				}
+
+				println!(" {bold}\x1b[0;34m- DownOnSpot v{VERSION} -\x1b[0m{bold_off}\n");
+
+				println!("Time elapsed:   {}", secs_to_min_sec(time_elapsed as i32));
+				println!(
+					"Time remaining: {}\n",
+					secs_to_min_sec(
+						(time_elapsed as f32
+							/ (progress_sum + num_completed as f32 + num_err as f32)
+							* (num_waiting as f32 + num_downloading as f32 - progress_sum))
+							.round() as i32
+					)
+				);
+
+				println!(
+					" {bold}{}   {}{bold_off}",
+					"Time".underline(),
+					"Event".underline()
+				);
+				for message in &messages {
+					println!("{}", message);
+				}
+				println!("\n\n {}", "Current downloads:".underline().bold());
+				println!("{}", current_download_view);
+
+				println!(
+					"\n {bold}Waiting | {} | {} | Total{bold_off}",
+					"Err/Skip".red(),
+					"Done".green()
+				);
+				println!(
+					" {: <8}| {: <9}| {: <5}| {}",
+					num_waiting,
+					num_err,
+					num_completed,
+					download_states.len()
+				);
+
 				time_elapsed = now.elapsed().as_secs();
 				if exit_flag == 1 {
 					break 'outer;
 				}
 
-				println!("\nElapsed second(s): {}", time_elapsed);
 				task::sleep(refresh).await
 			}
-			println!("Finished download(s) in {} second(s).", time_elapsed);
+			println!(
+				"Finished download(s) in {}.",
+				secs_to_min_sec(time_elapsed as i32)
+			);
 		}
 		Err(e) => {
 			error!("{} {}", "Handling input failed:".red(), e)
 		}
 	}
+}
+
+fn secs_to_min_sec(secs: i32) -> String {
+	format!("{:0>2}m{:0>2}s", secs / 60, secs % 60)
 }

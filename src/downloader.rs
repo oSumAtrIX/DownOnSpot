@@ -163,9 +163,6 @@ async fn communication_thread(
 			Message::UpdateState(id, state) => {
 				let i = queue.iter().position(|i| i.id == id).unwrap();
 				queue[i].state = state.clone();
-				if state == DownloadState::Done {
-					queue.remove(i);
-				}
 			}
 			Message::AddToQueue(download) => {
 				// Assign new IDs and reset state
@@ -264,17 +261,12 @@ impl DownloaderInternal {
 
 	/// Wrapper for download_job for error handling
 	async fn download_job_wrapper(&self, job: DownloadJob, config: DownloaderConfig) {
-		let track_id = job.track_id.clone();
 		let id = job.id;
 		match self.download_job(job, config).await {
 			Ok(_) => {}
 			Err(e) => {
-				error!("Download job for track {} failed. {}", track_id, e);
 				self.event_tx
-					.send(Message::UpdateState(
-						id,
-						DownloadState::Error(e.to_string()),
-					))
+					.send(Message::UpdateState(id, DownloadState::Error(e)))
 					.await
 					.unwrap();
 			}
@@ -845,7 +837,7 @@ pub enum DownloadState {
 	Downloading(usize, usize),
 	Post,
 	Done,
-	Error(String),
+	Error(SpotifyError),
 }
 
 /// Bitrate of music
