@@ -266,10 +266,7 @@ impl DownloaderInternal {
 			Ok(_) => {}
 			Err(e) => {
 				self.event_tx
-					.send(Message::UpdateState(
-						id,
-						DownloadState::Error(e),
-					))
+					.send(Message::UpdateState(id, DownloadState::Error(e)))
 					.await
 					.unwrap();
 			}

@@ -102,8 +102,8 @@ async fn start() {
 
 	let downloader = Downloader::new(settings.downloader, spotify);
 
-    let bold = "\x1b[1m";
-    let bold_off = "\x1b[0m";
+	let bold = "\x1b[1m";
+	let bold_off = "\x1b[0m";
 
 	match downloader.handle_input(&args.input).await {
 		Ok(search_results) => {
@@ -152,109 +152,144 @@ async fn start() {
 			let now = Instant::now();
 			let mut time_elapsed: u64 = 0;
 
-            let mut download_states = vec![DownloadState::None; downloader.get_downloads().await.len()];
-            let mut messages = vec![];
+			let mut download_states =
+				vec![DownloadState::None; downloader.get_downloads().await.len()];
+			let mut messages = vec![];
 
 			'outer: loop {
 				print!("\x1b[2J\x1b[1;1H");
 				let mut exit_flag: i8 = 1;
 
-                let mut num_completed = 0;
-                let mut num_err = 0;
-                let mut num_downloading = 0;
-                let mut num_waiting = 0;
+				let mut num_completed = 0;
+				let mut num_err = 0;
+				let mut num_downloading = 0;
+				let mut num_waiting = 0;
 
-                let mut current_download_view = String::new();
+				let mut current_download_view = String::new();
 
-                let mut progress_sum = 0.;
-
+				let mut progress_sum = 0.;
 
 				for (i, download) in (&downloader.get_downloads().await).iter().enumerate() {
 					let state = &download.state;
 
-                    if state != &download_states[i]{
-                        download_states[i] = state.clone();
-                        match state {
-                            DownloadState::None => (),
-                            DownloadState::Lock => (),
-                            DownloadState::Downloading(_, _) => (),
-                            DownloadState::Post => (),
-                            DownloadState::Done => messages.push(format!("{time_elapsed: >5} | {}: {}", "Downloaded".green(), download.title)),
-                            DownloadState::Error(e) => messages.push(format!("{time_elapsed: >5} | {}: {}", if e==&SpotifyError::AlreadyDownloaded{e.to_string().yellow()}else{e.to_string().red()}, download.title))
-                        };
+					if state != &download_states[i] {
+						download_states[i] = state.clone();
+						match state {
+							DownloadState::None => (),
+							DownloadState::Lock => (),
+							DownloadState::Downloading(_, _) => (),
+							DownloadState::Post => (),
+							DownloadState::Done => messages.push(format!(
+								"{time_elapsed: >5} | {}: {}",
+								"Downloaded".green(),
+								download.title
+							)),
+							DownloadState::Error(e) => messages.push(format!(
+								"{time_elapsed: >5} | {}: {}",
+								if e == &SpotifyError::AlreadyDownloaded {
+									e.to_string().yellow()
+								} else {
+									e.to_string().red()
+								},
+								download.title
+							)),
+						};
+					}
 
-                    }
+					if let Some(msg) = match state {
+						DownloadState::Downloading(r, t) => {
+							exit_flag &= 0;
+							let p = *r as f32 / *t as f32;
+							progress_sum += p;
+							num_downloading += 1;
+							if p > 1. {
+								Some("100%".to_string())
+							} else {
+								Some(format!("{}%", (p * 100.) as i8))
+							}
+						}
+						DownloadState::Post => {
+							exit_flag &= 0;
+							Some("Postprocessing... ".to_string())
+						}
+						DownloadState::None | DownloadState::Lock => {
+							exit_flag &= 0;
+							num_waiting += 1;
+							None
+						}
+						DownloadState::Error(_) => {
+							num_err += 1;
+							None
+						}
+						DownloadState::Done => {
+							num_completed += 1;
+							None
+						}
+					} {
+						current_download_view
+							.push_str(&format!("{: >4} | {}\n", msg, download.title));
+					}
+				}
 
-                    if let Some(msg) = match state {
-                        DownloadState::Downloading(r, t) => {
-                            exit_flag &= 0;
-                            let p = *r as f32 / *t as f32;
-                            progress_sum += p;
-                            num_downloading += 1;
-                            if p > 1. {
-                                Some("100%".to_string())
-                            } else {
-                                Some(format!("{}%", (p*100.) as i8))
-                            }
-                        }
-                        DownloadState::Post => {
-                            exit_flag &= 0;
-                            Some("Postprocessing... ".to_string())
-                        }
-                        DownloadState::None | DownloadState::Lock => {
-                            exit_flag &= 0;
-                            num_waiting += 1;
-                            None
-                        }
-                        DownloadState::Error(_) => {
-                            num_err += 1;
-                            None
-                        }
-                        DownloadState::Done => {
-                            num_completed += 1;
-                            None
-                        }
-                    }{
-                        current_download_view.push_str(&format!("{: >4} | {}\n", msg, download.title));
-                    }
+				while messages.len() > 8 {
+					messages.remove(0);
+				}
 
-                }
+				println!(" {bold}\x1b[0;34m- DownOnSpot v{VERSION} -\x1b[0m{bold_off}\n");
 
-                while messages.len() > 8 {
-                    messages.remove(0);
-                }
+				println!("Time elapsed:   {}", secs_to_min_sec(time_elapsed as i32));
+				println!(
+					"Time remaining: {}\n",
+					secs_to_min_sec(
+						(time_elapsed as f32
+							/ (progress_sum + num_completed as f32 + num_err as f32)
+							* (num_waiting as f32 + num_downloading as f32 - progress_sum))
+							.round() as i32
+					)
+				);
 
-                println!(" {bold}\x1b[0;34m- DownOnSpot v{VERSION} -\x1b[0m{bold_off}\n");
-                
-                println!("Time elapsed:   {}", secs_to_min_sec(time_elapsed as i32));
-                println!("Time remaining: {}\n", secs_to_min_sec((time_elapsed as f32 / (progress_sum + num_completed as f32 + num_err as f32) * (num_waiting as f32 + num_downloading as f32 - progress_sum)).round() as i32));
+				println!(
+					" {bold}{}   {}{bold_off}",
+					"Time".underline(),
+					"Event".underline()
+				);
+				for message in &messages {
+					println!("{}", message);
+				}
+				println!("\n\n {}", "Current downloads:".underline().bold());
+				println!("{}", current_download_view);
 
-                println!(" {bold}{}   {}{bold_off}", "Time".underline(), "Event".underline());
-                for message in &messages {
-                    println!("{}", message);
-                }
-                println!("\n\n {}", "Current downloads:".underline().bold());
-                println!("{}", current_download_view);
+				println!(
+					"\n {bold}Waiting | {} | {} | Total{bold_off}",
+					"Err/Skip".red(),
+					"Done".green()
+				);
+				println!(
+					" {: <8}| {: <9}| {: <5}| {}",
+					num_waiting,
+					num_err,
+					num_completed,
+					download_states.len()
+				);
 
-                println!("\n {bold}Waiting | {} | {} | Total{bold_off}", "Err/Skip".red(), "Done".green());
-                println!(" {: <8}| {: <9}| {: <5}| {}", num_waiting, num_err, num_completed, download_states.len());
+				time_elapsed = now.elapsed().as_secs();
+				if exit_flag == 1 {
+					break 'outer;
+				}
 
-                time_elapsed = now.elapsed().as_secs();
-                if exit_flag == 1 {
-                    break 'outer;
-                }
-
-                task::sleep(refresh).await
-            }
-            println!("Finished download(s) in {}.", secs_to_min_sec(time_elapsed as i32));
-        }
-        Err(e) => {
-            error!("{} {}", "Handling input failed:".red(), e)
-        }
-    }
+				task::sleep(refresh).await
+			}
+			println!(
+				"Finished download(s) in {}.",
+				secs_to_min_sec(time_elapsed as i32)
+			);
+		}
+		Err(e) => {
+			error!("{} {}", "Handling input failed:".red(), e)
+		}
+	}
 }
 
-
-fn secs_to_min_sec(secs: i32) -> String{
-    format!("{:0>2}m{:0>2}s", secs/60, secs%60)
+fn secs_to_min_sec(secs: i32) -> String {
+	format!("{:0>2}m{:0>2}s", secs / 60, secs % 60)
 }
